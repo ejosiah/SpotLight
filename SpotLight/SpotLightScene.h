@@ -40,6 +40,7 @@ public:
 		sphere->material().diffuse = RED;
 		sphere->material().specular = vec4(1);
 		sphere->material().shininess = 50.0f;
+		cam.view = lookAt({ 0.0, 4.0, 6.0 }, vec3{ 0 }, { 0.0, 1.0, 0.0 });
 
 
 		sphere2 = new Sphere(0.2, 20, 20);
@@ -95,24 +96,13 @@ public:
 	}
 
 	void initColorBuffer() {
-		glGenBuffers(1, &color_buffer);
-		glBindBuffer(GL_TEXTURE_BUFFER, color_buffer);
-		glBufferData(GL_TEXTURE_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
-		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, color_buffer);
-		_shader.sendUniform1ui("color_tbo", 0);
+		color_tbo = new TextureBuffer(colors, sizeof(colors));
+		_shader.sendUniform1ui("color_tbo", color_tbo->id());
 	}
 
 	void initMatrixBuffer() {
-		glActiveTexture(GL_TEXTURE1);
-		glGenFramebuffers(1, &matrix_buffer);
-		glBindBuffer(GL_TEXTURE_BUFFER, matrix_buffer);
-		glBufferData(GL_TEXTURE_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
-
-		glGenTextures(1, &matrix_tbo);
-		glBindTexture(GL_TEXTURE_BUFFER, matrix_tbo);
-		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, matrix_buffer);
-		_shader.sendUniform1ui("matrix_tbo", 1);
-		glActiveTexture(GL_TEXTURE0);
+		matrix_tbo = new TextureBuffer(positions, sizeof(positions));
+		_shader.sendUniform1ui("matrix_tbo", matrix_tbo->id());
 
 	}
 
@@ -126,7 +116,7 @@ public:
 		sbr << "Spotlight attenuation: " << setprecision(3) << light[0].spotExponent;
 		font->render(sbr.str(), 10, height() - 25);
 
-		cam.view = lookAt({ 0.0, 4.0, 6.0 }, vec3{ 0 }, { 0.0, 1.0, 0.0 });
+		
 		light[0].on = true;
 		light[0].position.x = xMove;
 		light[0].position.z = zMove;
@@ -172,13 +162,13 @@ private:
 	Shader shader;
 	mat4 positions[81];
 	vec4 colors[81];
-	GLuint color_tbo;
-	GLuint matrix_tbo;
+	TextureBuffer* color_tbo;
+	TextureBuffer* matrix_tbo;
 	GLuint color_buffer;
 	GLuint matrix_buffer;
 	Font* font;
 	float xMove = 0;
 	float zMove = 0;
-	float spotAngle = 90.0f;
+	float spotAngle = 45.0f;
 	float spotExponent = 2.0f;
 };
